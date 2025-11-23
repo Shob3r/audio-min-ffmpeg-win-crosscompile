@@ -23,3 +23,16 @@ jobs:
       - name: build (Linux)
         run: echo 4 | ./cross_compiled_ffmpeg.sh
       
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with: 
+          tag: "auto-${{ github.run_number }}"
+          name: "Auto Build ${{ github.run_number }}"
+          draft: false
+          prerelease: false
+      - name: Upload Release Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '{sandbox/win64/ffmpeg_git/ffmpeg.exe, sandbox/native/ffmpeg_git/ffmpeg}'
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
