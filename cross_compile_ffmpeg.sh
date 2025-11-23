@@ -2456,7 +2456,6 @@ build_ffmpeg() {
     # config_options+=" --enable-libzimg"
     # config_options+=" --enable-libzvbi"
     config_options+=" --enable-libmysofa"
-    config_options+=" --enable-librnnoise"
     # config_options+=" --enable-libopenjpeg"
     # config_options+=" --enable-libopenh264"
     # config_options+=" --enable-libvmaf"
@@ -2678,14 +2677,6 @@ build_lsw() {
    cd ../..
 }
 
-build_rnnoise() {
-  do_git_checkout https://github.com/xiph/rnnoise.git rnnoise
-  cd rnnoise
-  ./autogen.sh
-  CFLAGS="-march=haswell -mavx -mavx2 -mfma" ./configure --prefix=$mingw_w64_x86_64_prefix --host=mingw64
-  do_make_and_make_install
-}
-
 find_all_build_exes() {
   local found=""
 # NB that we're currently in the sandbox dir...
@@ -2815,7 +2806,6 @@ build_ffmpeg_dependencies() {
   # build_libopenh264
   # build_libaom
   # build_dav1d
-  build_rnnoise
   if [[ $OSTYPE != darwin* ]]; then
     build_vulkan
   fi
