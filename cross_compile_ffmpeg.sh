@@ -1575,8 +1575,8 @@ build_vamp_plugin() {
       sed -i.bak "s/c++11/gnu++11/" Makefile.in
     fi
     do_configure "--host=$host_target --prefix=$mingw_w64_x86_64_prefix --disable-programs"
-    do_make "install-static" # No need for 'do_make_install', because 'install-static' already has install-instructions.
-  cd ..
+    make install-static
+    cd ..
 }
 
 build_fftw() {
