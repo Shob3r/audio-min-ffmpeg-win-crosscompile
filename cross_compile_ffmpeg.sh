@@ -1564,8 +1564,8 @@ build_libsnappy() {
 }
 
 build_vamp_plugin() {
-  download_and_unpack_file https://download1348.mediafire.com/kkawb2girftgMrE0nzAhx1uDTjTgrrS-ydhn0HcQ-UOA0ptRaNe-UkTLYphLBAvGIG5RYN26p5ynvBswSZ5zPxXybYzuHd1ubOl0q4AUlZ_IMFoh3o2D3YDmD3f9Xgqt18VvZjfeUyOSVuky_E_lJj4CO8s7EvjhQ5lMB2F1k4Q/nj2lhty33l9xafm/vamp-plugin-sdk-2.10.0.tar.gz
-  cd vamp-plugin-sdk-2.10.0
+  do_git_checkout https://github.com/vamp-plugins/vamp-plugin-sdk.git vamp-plugin-sdk_git
+  cd vamp-plugin-sdk_git
     apply_patch file://$patch_dir/vamp-plugin-sdk-2.10_static-lib.diff
     if [[ $compiler_flavors != "native" && ! -f src/vamp-sdk/PluginAdapter.cpp.bak ]]; then
       sed -i.bak "s/#include <mutex>/#include <mingw.mutex.h>/" src/vamp-sdk/PluginAdapter.cpp
