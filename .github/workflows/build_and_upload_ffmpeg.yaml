@@ -1,4 +1,4 @@
-name: 'build & upload ffmpeg artifacts'
+name: 'Build & upload FFmpeg artifacts'
 
 on:
  schedule:
@@ -9,28 +9,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo
+      - name: Checkout
         uses: actions/checkout@v6
 
-      - name: install dependencies
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt upgrade -y
           sudo apt install build-essential subversion ragel curl texinfo g++ ed bison flex cvs yasm automake libtool autoconf gcc cmake git make pkg-config zlib1g-dev unzip pax nasm gperf autogen bzip2 autoconf-archive p7zip-full meson clang python-is-python3 -y
-      - name: build (Win64)
+      - name: Build (Win64)
         run: echo 3 | ./cross_compile_ffmpeg.sh
         
-      - name: build (Linux)
+      - name: Build (Linux)
         run: echo 4 | ./cross_compiled_ffmpeg.sh
       
+      - name: Get date
+        id: date
+        run: echo "CURRENT_DATE=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
       - name: Create Release
         uses: ncipollo/release-action@v1
         with: 
-          tag: "auto-${{ github.run_number }}"
-          name: "Auto Build ${{ github.run_number }}"
+          tag: "build-${{ steps.date.outputs.CURRENT_DATE }}"
+          name: "Build ${{ steps.date.outputs.CURRENT_DATE }}"
           draft: false
           prerelease: false
-      - name: Upload Release Artifacts
+      - name: Upload release artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: '{sandbox/win64/ffmpeg_git/ffmpeg.exe, sandbox/native/ffmpeg_git/ffmpeg}'
