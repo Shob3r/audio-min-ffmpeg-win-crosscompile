@@ -1,0 +1,25 @@
+name: 'build & upload ffmpeg artifacts'
+
+on:
+ schedule:
+ - cron: 0 0 * * 1 # Every Monday at 12:00 AM UTC
+ workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6
+
+      - name: install dependencies
+        run: |
+          sudo apt update
+          sudo apt upgrade -y
+          sudo apt install build-essential subversion ragel curl texinfo g++ ed bison flex cvs yasm automake libtool autoconf gcc cmake git make pkg-config zlib1g-dev unzip pax nasm gperf autogen bzip2 autoconf-archive p7zip-full meson clang python-is-python3 -y
+      - name: build (Win64)
+        run: echo 3 | ./cross_compile_ffmpeg.sh
+        
+      - name: build (Linux)
+        run: echo 4 | ./cross_compiled_ffmpeg.sh
+      
