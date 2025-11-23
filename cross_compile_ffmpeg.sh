@@ -2806,9 +2806,9 @@ build_ffmpeg_dependencies() {
   # build_libopenh264
   # build_libaom
   # build_dav1d
-  if [[ $OSTYPE != darwin* ]]; then
-    build_vulkan
-  fi
+  # if [[ $OSTYPE != darwin* ]]; then
+  #   build_vulkan
+  # fi
   # build_avisynth
   # build_libx264 # at bottom as it might internally build a copy of ffmpeg (which needs all the above deps...
  }
