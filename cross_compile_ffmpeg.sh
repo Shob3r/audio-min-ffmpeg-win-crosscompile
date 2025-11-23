@@ -2681,8 +2681,8 @@ build_lsw() {
 build_rnnoise() {
   do_git_checkout https://github.com/xiph/rnnoise.git rnnoise
   cd rnnoise
-  ./audogen.sh
-  do_configure "--prefix=$mingw_w64_x86_64_prefix --host=mingw64"
+  ./autogen.sh
+  CFLAGS="-march=haswell -mavx -mavx2 -mfma" ./configure --prefix=$mingw_w64_x86_64_prefix --host=mingw64
   do_make_and_make_install
 }
 
