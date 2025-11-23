@@ -2792,7 +2792,7 @@ build_ffmpeg_dependencies() {
   # build_libass # Needs freetype >= 9.10.3 (see https://bugs.launchpad.net/ubuntu/+source/freetype1/+bug/78573 o_O) and fribidi >= 0.19.0. Uses fontconfig >= 2.10.92, iconv and dlfcn.
 
   # build_libxvid # FFmpeg now has native support, but libxvid still provides a better image.
-  build_libsrt # requires gnutls, mingw-std-threads
+  # build_libsrt # requires gnutls, mingw-std-threads
   # if [[ $ffmpeg_git_checkout_version != *"n6.0"* ]] && [[ $ffmpeg_git_checkout_version != *"n5"* ]] && [[ $ffmpeg_git_checkout_version != *"n4"* ]] && [[ $ffmpeg_git_checkout_version != *"n3"* ]] && [[ $ffmpeg_git_checkout_version != *"n2"* ]]; then
   #   # Disable libaribcatption on old versions
   #   build_libaribcaption
