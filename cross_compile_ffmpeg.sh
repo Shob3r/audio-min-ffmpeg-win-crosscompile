@@ -2715,7 +2715,7 @@ build_ffmpeg_dependencies() {
   build_bzip2 # Bzlib (bzip2) in FFmpeg is autodetected.
   build_liblzma # Lzma in FFmpeg is autodetected. Uses dlfcn.
   build_iconv # Iconv in FFmpeg is autodetected. Uses dlfcn.
-  build_sdl2 # Sdl2 in FFmpeg is autodetected. Needed to build FFPlay. Uses iconv and dlfcn.
+  # build_sdl2 # Sdl2 in FFmpeg is autodetected. Needed to build FFPlay. Uses iconv and dlfcn.
   # if [[ $build_amd_amf = y ]]; then
   #   build_amd_amf_headers
   # fi
@@ -2737,10 +2737,10 @@ build_ffmpeg_dependencies() {
   # build_fontconfig # Needs freetype and libxml >= 2.6. Uses iconv and dlfcn.
   build_gmp # For rtmp support configure FFmpeg with '--enable-gmp'. Uses dlfcn.
   #build_librtmfp # mainline ffmpeg doesn't use it yet
-  build_libnettle # Needs gmp >= 3.0. Uses dlfcn.
-  build_unistring
+  # build_libnettle # Needs gmp >= 3.0. Uses dlfcn.
+  # build_unistring
   build_libidn2 # needs iconv and unistring
-  build_gnutls # Needs nettle >= 3.1, hogweed (nettle) >= 3.1. Uses libidn2, unistring, zlib, and dlfcn.
+  # build_gnutls # Needs nettle >= 3.1, hogweed (nettle) >= 3.1. Uses libidn2, unistring, zlib, and dlfcn.
   #if [[ "$non_free" = "y" ]]; then
   #  build_openssl-1.0.2 # Nonfree alternative to GnuTLS. 'build_openssl-1.0.2 "dllonly"' to build shared libraries only.
   #  build_openssl-1.1.1 # Nonfree alternative to GnuTLS. Can't be used with LibRTMP. 'build_openssl-1.1.1 "dllonly"' to build shared libraries only.
