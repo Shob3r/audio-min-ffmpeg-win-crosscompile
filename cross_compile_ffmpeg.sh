@@ -2728,7 +2728,7 @@ build_ffmpeg_dependencies() {
   # build_libwebp # Uses dlfcn.
   # build_harfbuzz
   # harf does now include build_freetype # Uses zlib, bzip2, and libpng.
-  build_libxml2 # Uses zlib, liblzma, iconv and dlfcn.
+  # build_libxml2 # Uses zlib, liblzma, iconv and dlfcn.
   # build_libvmaf
   # build_fontconfig # Needs freetype and libxml >= 2.6. Uses iconv and dlfcn.
   build_gmp # For rtmp support configure FFmpeg with '--enable-gmp'. Uses dlfcn.
