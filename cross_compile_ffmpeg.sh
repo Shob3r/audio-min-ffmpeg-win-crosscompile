@@ -2722,11 +2722,11 @@ build_ffmpeg_dependencies() {
   # if [[ $build_intel_qsv = y && $compiler_flavors != "native" ]]; then # Broken for native builds right now: https://github.com/lu-zero/mfx_dispatch/issues/71
   #   build_intel_qsv_mfx
   # fi
-  build_nv_headers
+  # build_nv_headers
   # build_libzimg # Uses dlfcn.
   # build_libopenjpeg
-  build_glew
-  build_glfw
+  # build_glew
+  # build_glfw
   #build_libjpeg_turbo # mplayer can use this, VLC qt might need it? [replaces libjpeg] (ffmpeg seems to not need it so commented out here)
   # build_libpng # Needs zlib >= 1.0.4. Uses dlfcn.
   # build_libwebp # Uses dlfcn.
