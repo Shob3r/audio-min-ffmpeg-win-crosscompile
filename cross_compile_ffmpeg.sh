@@ -2468,7 +2468,7 @@ build_ffmpeg() {
     config_options+=" --enable-muxer=mp3,ogg,opus,wav"
     config_options+=" --enable-protocol=file"
     config_options+=" --disable-autodetect"
-    config_options+=" --disable-docs"
+    config_options+=" --disable-doc"
 
     # if [[ "$bits_target" != "32" ]]; then
     #   if [[ $build_svt_hevc = y ]]; then
