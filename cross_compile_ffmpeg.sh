@@ -341,7 +341,7 @@ install_cross_compiler() {
 
     # --disable-shared allows c++ to be distributed at all...which seemed necessary for some random dependency which happens to use/require c++...
     local zeranoe_script_name=mingw-w64-build-r22.local
-    local zeranoe_script_options="--gcc-ver=10.2.0 --mingw-w64-ver=9.0.0 --default-configure --cpu-count=$gcc_cpu_count --disable-shared --clean-build --verbose --allow-overwrite --threads=winpthreads" # allow-overwrite to avoid some crufty prompts if I do rebuilds [or maybe should just nuke everything...]
+    local zeranoe_script_options="--gcc-ver=15.2.0 --mingw-w64-ver=13.0.0 --default-configure --cpu-count=$gcc_cpu_count --disable-shared --clean-build --verbose --allow-overwrite --threads=winpthreads" # allow-overwrite to avoid some crufty prompts if I do rebuilds [or maybe should just nuke everything...]
     if [[ ($compiler_flavors == "win32" || $compiler_flavors == "multi") && ! -f ../$win32_gcc ]]; then
       echo "Building win32 cross compiler..."
       download_gcc_build_script $zeranoe_script_name
@@ -795,7 +795,7 @@ build_bzip2() {
 }
 
 build_liblzma() {
-  download_and_unpack_file https://sourceforge.net/projects/lzmautils/files/xz-5.2.5.tar.xz
+  download_and_unpack_file https://sourceforge.net/projects/lzmautils/files/xz-5.8.1.tar.xz
   cd xz-5.2.5
     generic_configure "--disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-scripts --disable-doc --disable-nls"
     do_make_and_make_install
@@ -803,7 +803,7 @@ build_liblzma() {
 }
 
 build_zlib() {
-  download_and_unpack_file https://github.com/madler/zlib/archive/v1.2.11.tar.gz zlib-1.2.11
+  download_and_unpack_file https://github.com/madler/zlib/archive/v1.3.1.tar.gz zlib-1.2.11
   cd zlib-1.2.11
     local make_options
     if [[ $compiler_flavors == "native" ]]; then
@@ -822,7 +822,7 @@ build_zlib() {
 }
 
 build_iconv() {
-  download_and_unpack_file https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
+  download_and_unpack_file https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz
   cd libiconv-1.16
     generic_configure "--disable-nls"
     do_make "install-lib" # No need for 'do_make_install', because 'install-lib' already has install-instructions.
@@ -830,9 +830,9 @@ build_iconv() {
 }
 
 build_sdl2() {
-  download_and_unpack_file https://www.libsdl.org/release/SDL2-2.0.12.tar.gz
-  cd SDL2-2.0.12
-    apply_patch file://$patch_dir/SDL2-2.0.12_lib-only.diff
+  download_and_unpack_file https://www.libsdl.org/release/SDL2-2.32.10.tar.gz
+  cd SDL2-2.32.10
+    # apply_patch file://$patch_dir/SDL2-2.0.12_lib-only.diff
     if [[ ! -f configure.bak ]]; then
       sed -i.bak "s/ -mwindows//" configure # Allow ffmpeg to output anything to console.
     fi
@@ -911,7 +911,7 @@ build_libleptonica() {
 
 build_libtiff() {
   build_libjpeg_turbo # auto uses it?
-  generic_download_and_make_and_install http://download.osgeo.org/libtiff/tiff-4.1.0.tar.gz
+  generic_download_and_make_and_install https://download.osgeo.org/libtiff/tiff-4.7.1.tar.xz
   sed -i.bak 's/-ltiff.*$/-ltiff -llzma -ljpeg -lz/' $PKG_CONFIG_PATH/libtiff-4.pc # static deps
 }
 
@@ -921,12 +921,12 @@ build_libtensorflow() {
 
 build_glib() {
   export CPPFLAGS="$CPPFLAGS -DLIBXML_STATIC -liconv" # gettext build...
-  generic_download_and_make_and_install  https://ftp.gnu.org/pub/gnu/gettext/gettext-0.21.tar.gz
+  generic_download_and_make_and_install  https://ftp.gnu.org/pub/gnu/gettext/gettext-0.26.tar.xz
   reset_cppflags
-  generic_download_and_make_and_install  https://github.com/libffi/libffi/releases/download/v3.3/libffi-3.3.tar.gz # also dep
-  download_and_unpack_file https://gitlab.gnome.org/GNOME/glib/-/archive/2.64.3/glib-2.64.3.tar.gz
+  generic_download_and_make_and_install  https://github.com/libffi/libffi/releases/download/v3.5.2/libffi-3.5.2.tar.gz # also dep
+  download_and_unpack_file https://gitlab.gnome.org/GNOME/glib/-/archive/2.86.2/glib-2.86.2.tar.gz
   cd glib-2.64.3
-    apply_patch  file://$patch_dir/glib-2.64.3_mingw-static.patch -p1
+    apply_patch  file://$patch_dir/glib-2.64.3_mingw-static.patch -p1 # Not sure if this will cause issues but it probably is for the best if this is left on
     export CPPFLAGS="$CPPFLAGS -pthread -DGLIB_STATIC_COMPILATION"
     export CXXFLAGS="$CFLAGS" # Not certain this is needed, but it doesn't hurt
     export LDFLAGS="-L${mingw_w64_x86_64_prefix}/lib" # For some reason the frexp configure checks fail without this as math.h isn't found when cross-compiling; no negative impact for native builds
@@ -1069,7 +1069,7 @@ build_freetype() {
   local force_build=$2
   local new_build=1
   if [[ ! -f freetype-2.10.4/already_done_freetype || $force_build = true ]]; then
-    download_and_unpack_file https://sourceforge.net/projects/freetype/files/freetype2/2.10.4/freetype-2.10.4.tar.xz
+    download_and_unpack_file https://sourceforge.net/projects/freetype/files/freetype2/2.14.1/freetype-2.14.1.tar.xz
     rm -f freetype-2.10.4/already*
     cd freetype-2.10.4
         apply_patch file://$patch_dir/freetype2-crosscompiled-apinames.diff # src/tools/apinames.c gets crosscompiled and makes the compilation fail
@@ -1084,7 +1084,7 @@ build_freetype() {
 }
 
 build_libxml2() {
-  download_and_unpack_file http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz libxml2-2.9.10
+  download_and_unpack_file http://xmlsoft.org/sources/libxml2-2.9.12.tar.gz libxml2-2.9.12
   cd libxml2-2.9.10
     generic_configure "--with-ftp=no --with-http=no --with-python=no"
     do_make_and_make_install
@@ -1119,7 +1119,7 @@ build_libvmaf() {
 }
 
 build_fontconfig() {
-  download_and_unpack_file https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.13.92.tar.xz
+  download_and_unpack_file https://www.freedesktop.org/software/fontconfig/release/fontconfig-2.16.0.tar.xz
   cd fontconfig-2.13.92
     #export CFLAGS= # compile fails with -march=sandybridge ... with mingw 4.0.6 at least ...
     generic_configure "--enable-iconv --enable-libxml2 --disable-docs --with-libiconv" # Use Libxml2 instead of Expat.
@@ -1129,7 +1129,7 @@ build_fontconfig() {
 }
 
 build_gmp() {
-  download_and_unpack_file https://ftp.gnu.org/pub/gnu/gmp/gmp-6.2.1.tar.xz
+  download_and_unpack_file https://ftp.gnu.org/pub/gnu/gmp/gmp-6.3.0.tar.xz
   cd gmp-6.2.1
     export CC_FOR_BUILD=/usr/bin/gcc # WSL seems to need this..
     export CPP_FOR_BUILD=usr/bin/cpp
@@ -1167,7 +1167,7 @@ build_librtmfp() {
 }
 
 build_libnettle() {
-  download_and_unpack_file https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz
+  download_and_unpack_file https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz
   cd nettle-3.6
     local config_options="--disable-openssl --disable-documentation" # in case we have both gnutls and openssl, just use gnutls [except that gnutls uses this so...huh?
     if [[ $compiler_flavors == "native" ]]; then
@@ -1179,16 +1179,16 @@ build_libnettle() {
 }
 
 build_unistring() {
-  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libunistring/libunistring-0.9.10.tar.xz
+  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libunistring/libunistring-1.4.tar.xz
 }
 
 build_libidn2() {
-  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libidn/libidn2-2.3.0.tar.gz
+  generic_download_and_make_and_install https://ftp.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz
 }
 
 build_gnutls() {
-  download_and_unpack_file https://www.gnupg.org/ftp/gcrypt/gnutls/v3.6/gnutls-3.6.15.tar.xz
-  cd gnutls-3.6.15
+  download_and_unpack_file https://www.gnupg.org/ftp/gcrypt/gnutls/v3.8/gnutls-3.8.11.tar.xz
+  cd gnutls-3.8.11
     # --disable-cxx don't need the c++ version, in an effort to cut down on size... XXXX test size difference...
     # --enable-local-libopts to allow building with local autogen installed,
     # --disable-guile is so that if it finds guile installed (cygwin did/does) it won't try and link/build to it and fail...
@@ -1207,103 +1207,103 @@ build_gnutls() {
   cd ..
 }
 
-build_openssl-1.0.2() {
-  download_and_unpack_file https://www.openssl.org/source/openssl-1.0.2p.tar.gz
-  cd openssl-1.0.2p
-    apply_patch file://$patch_dir/openssl-1.0.2l_lib-only.diff
-    export CC="${cross_prefix}gcc"
-    export AR="${cross_prefix}ar"
-    export RANLIB="${cross_prefix}ranlib"
-    local config_options="--prefix=$mingw_w64_x86_64_prefix zlib "
-    if [ "$1" = "dllonly" ]; then
-      config_options+="shared "
-    else
-      config_options+="no-shared no-dso "
-    fi
-    if [ "$bits_target" = "32" ]; then
-      config_options+="mingw" # Build shared libraries ('libeay32.dll' and 'ssleay32.dll') if "dllonly" is specified.
-      local arch=x86
-    else
-      config_options+="mingw64" # Build shared libraries ('libeay64.dll' and 'ssleay64.dll') if "dllonly" is specified.
-      local arch=x86_64
-    fi
-    do_configure "$config_options" ./Configure
-    if [[ ! -f Makefile_1 ]]; then
-      sed -i_1 "s/-O3/-O2/" Makefile # Change CFLAGS (OpenSSL's 'Configure' already creates a 'Makefile.bak').
-    fi
-    if [ "$1" = "dllonly" ]; then
-      do_make "build_libs"
+# build_openssl-1.0.2() {
+  # download_and_unpack_file https://www.openssl.org/source/openssl-1.0.2p.tar.gz
+  # cd openssl-1.0.2p
+    # apply_patch file://$patch_dir/openssl-1.0.2l_lib-only.diff
+    # export CC="${cross_prefix}gcc"
+    # export AR="${cross_prefix}ar"
+    # export RANLIB="${cross_prefix}ranlib"
+    # local config_options="--prefix=$mingw_w64_x86_64_prefix zlib "
+    # if [ "$1" = "dllonly" ]; then
+      # config_options+="shared "
+    # else
+      # config_options+="no-shared no-dso "
+    # fi
+    # if [ "$bits_target" = "32" ]; then
+    #   config_options+="mingw" # Build shared libraries ('libeay32.dll' and 'ssleay32.dll') if "dllonly" is specified.
+    #   local arch=x86
+    # else
+    #   config_options+="mingw64" # Build shared libraries ('libeay64.dll' and 'ssleay64.dll') if "dllonly" is specified.
+    #   local arch=x86_64
+    # fi
+    # do_configure "$config_options" ./Configure
+    # if [[ ! -f Makefile_1 ]]; then
+    #   sed -i_1 "s/-O3/-O2/" Makefile # Change CFLAGS (OpenSSL's 'Configure' already creates a 'Makefile.bak').
+    # fi
+    # if [ "$1" = "dllonly" ]; then
+    #   do_make "build_libs"
 
-      mkdir -p $cur_dir/redist # Strip and pack shared libraries.
-      archive="$cur_dir/redist/openssl-${arch}-v1.0.2l.7z"
-      if [[ ! -f $archive ]]; then
-        for sharedlib in *.dll; do
-          ${cross_prefix}strip $sharedlib
-        done
-        sed "s/$/\r/" LICENSE > LICENSE.txt
-        7z a -mx=9 $archive *.dll LICENSE.txt && rm -f LICENSE.txt
-      fi
-    else
-      do_make_and_make_install
-    fi
-    unset CC
-    unset AR
-    unset RANLIB
-  cd ..
-}
+    #   mkdir -p $cur_dir/redist # Strip and pack shared libraries.
+    #   archive="$cur_dir/redist/openssl-${arch}-v1.0.2l.7z"
+    #   if [[ ! -f $archive ]]; then
+    #     for sharedlib in *.dll; do
+    #       ${cross_prefix}strip $sharedlib
+    #     done
+    #     sed "s/$/\r/" LICENSE > LICENSE.txt
+    #     7z a -mx=9 $archive *.dll LICENSE.txt && rm -f LICENSE.txt
+    #   fi
+    # else
+    #   do_make_and_make_install
+    # fi
+    # unset CC
+    # unset AR
+    # unset RANLIB
+  # cd ..
+# }
 
-build_openssl-1.1.1() {
-  download_and_unpack_file https://www.openssl.org/source/openssl-1.1.1.tar.gz
-  cd openssl-1.1.1
-    export CC="${cross_prefix}gcc"
-    export AR="${cross_prefix}ar"
-    export RANLIB="${cross_prefix}ranlib"
-    local config_options="--prefix=$mingw_w64_x86_64_prefix zlib "
-    if [ "$1" = "dllonly" ]; then
-      config_options+="shared no-engine "
-    else
-      config_options+="no-shared no-dso no-engine "
-    fi
-    if [[ `uname` =~ "5.1" ]] || [[ `uname` =~ "6.0" ]]; then
-      config_options+="no-async " # "Note: on older OSes, like CentOS 5, BSD 5, and Windows XP or Vista, you will need to configure with no-async when building OpenSSL 1.1.0 and above. The configuration system does not detect lack of the Posix feature on the platforms." (https://wiki.openssl.org/index.php/Compilation_and_Installation)
-    fi
-    if [[ $compiler_flavors == "native" ]]; then
-      if [[ $OSTYPE == darwin* ]]; then
-        config_options+="darwin64-x86_64-cc "
-      else
-        config_options+="linux-generic64 "
-      fi
-      local arch=native
-    elif [ "$bits_target" = "32" ]; then
-      config_options+="mingw" # Build shared libraries ('libcrypto-1_1.dll' and 'libssl-1_1.dll') if "dllonly" is specified.
-      local arch=x86
-    else
-      config_options+="mingw64" # Build shared libraries ('libcrypto-1_1-x64.dll' and 'libssl-1_1-x64.dll') if "dllonly" is specified.
-      local arch=x86_64
-    fi
-    do_configure "$config_options" ./Configure
-    if [[ ! -f Makefile.bak ]]; then # Change CFLAGS.
-      sed -i.bak "s/-O3/-O2/" Makefile
-    fi
-    do_make "build_libs"
-    if [ "$1" = "dllonly" ]; then
-      mkdir -p $cur_dir/redist # Strip and pack shared libraries.
-      archive="$cur_dir/redist/openssl-${arch}-v1.1.0f.7z"
-      if [[ ! -f $archive ]]; then
-        for sharedlib in *.dll; do
-          ${cross_prefix}strip $sharedlib
-        done
-        sed "s/$/\r/" LICENSE > LICENSE.txt
-        7z a -mx=9 $archive *.dll LICENSE.txt && rm -f LICENSE.txt
-      fi
-    else
-      do_make_install "" "install_dev"
-    fi
-    unset CC
-    unset AR
-    unset RANLIB
-  cd ..
-}
+# build_openssl-1.1.1() {
+#   download_and_unpack_file https://www.openssl.org/source/openssl-1.1.1.tar.gz
+#   cd openssl-1.1.1
+#     export CC="${cross_prefix}gcc"
+#     export AR="${cross_prefix}ar"
+#     export RANLIB="${cross_prefix}ranlib"
+#     local config_options="--prefix=$mingw_w64_x86_64_prefix zlib "
+#     if [ "$1" = "dllonly" ]; then
+#       config_options+="shared no-engine "
+#     else
+#       config_options+="no-shared no-dso no-engine "
+#     fi
+#     if [[ `uname` =~ "5.1" ]] || [[ `uname` =~ "6.0" ]]; then
+#       config_options+="no-async " # "Note: on older OSes, like CentOS 5, BSD 5, and Windows XP or Vista, you will need to configure with no-async when building OpenSSL 1.1.0 and above. The configuration system does not detect lack of the Posix feature on the platforms." (https://wiki.openssl.org/index.php/Compilation_and_Installation)
+#     fi
+#     if [[ $compiler_flavors == "native" ]]; then
+#       if [[ $OSTYPE == darwin* ]]; then
+#         config_options+="darwin64-x86_64-cc "
+#       else
+#         config_options+="linux-generic64 "
+#       fi
+#       local arch=native
+#     elif [ "$bits_target" = "32" ]; then
+#       config_options+="mingw" # Build shared libraries ('libcrypto-1_1.dll' and 'libssl-1_1.dll') if "dllonly" is specified.
+#       local arch=x86
+#     else
+#       config_options+="mingw64" # Build shared libraries ('libcrypto-1_1-x64.dll' and 'libssl-1_1-x64.dll') if "dllonly" is specified.
+#       local arch=x86_64
+#     fi
+#     do_configure "$config_options" ./Configure
+#     if [[ ! -f Makefile.bak ]]; then # Change CFLAGS.
+#       sed -i.bak "s/-O3/-O2/" Makefile
+#     fi
+#     do_make "build_libs"
+#     if [ "$1" = "dllonly" ]; then
+#       mkdir -p $cur_dir/redist # Strip and pack shared libraries.
+#       archive="$cur_dir/redist/openssl-${arch}-v1.1.0f.7z"
+#       if [[ ! -f $archive ]]; then
+#         for sharedlib in *.dll; do
+#           ${cross_prefix}strip $sharedlib
+#         done
+#         sed "s/$/\r/" LICENSE > LICENSE.txt
+#         7z a -mx=9 $archive *.dll LICENSE.txt && rm -f LICENSE.txt
+#       fi
+#     else
+#       do_make_install "" "install_dev"
+#     fi
+#     unset CC
+#     unset AR
+#     unset RANLIB
+#   cd ..
+# }
 
 build_libogg() {
   do_git_checkout https://github.com/xiph/ogg.git
@@ -1418,7 +1418,7 @@ local checkout_dir=fdk-aac_git
 }
 
 build_libopencore() {
-  generic_download_and_make_and_install https://sourceforge.net/projects/opencore-amr/files/opencore-amr/opencore-amr-0.1.5.tar.gz
+  generic_download_and_make_and_install https://sourceforge.net/projects/opencore-amr/files/opencore-amr/opencore-amr-0.1.6.tar.gz
   generic_download_and_make_and_install https://sourceforge.net/projects/opencore-amr/files/vo-amrwbenc/vo-amrwbenc-0.1.3.tar.gz
 }
 
@@ -1444,8 +1444,8 @@ build_libmodplug() {
 
 build_libgme() {
   # do_git_checkout https://bitbucket.org/mpyne/game-music-emu.git
-  download_and_unpack_file https://github.com/libgme/game-music-emu/releases/download/0.6.3/libgme-0.6.3-src.tar.gz libgme-0.6.3
-  cd libgme-0.6.3
+  download_and_unpack_file https://github.com/libgme/game-music-emu/releases/download/0.6.4/libgme-0.6.4-src.tar.gz libgme-0.6.4
+  cd libgme-0.6.4
     do_cmake_and_install "-DENABLE_UBSAN=0"
   cd ..
 }
@@ -1580,8 +1580,8 @@ build_vamp_plugin() {
 }
 
 build_fftw() {
-  download_and_unpack_file http://fftw.org/fftw-3.3.8.tar.gz
-  cd fftw-3.3.8
+  download_and_unpack_file http://fftw.org/fftw-3.3.10.tar.gz
+  cd fftw-3.3.10
     generic_configure "--disable-doc"
     do_make_and_make_install
   cd ..
@@ -1611,8 +1611,8 @@ build_librubberband() {
 build_frei0r() {
   #do_git_checkout https://github.com/dyne/frei0r.git
   #cd frei0r_git
-  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v2.3.0.tar.gz frei0r-2.3.0
-  cd frei0r-2.3.0
+  download_and_unpack_file https://github.com/dyne/frei0r/archive/refs/tags/v2.5.0.tar.gz frei0r-2.5.0
+  cd frei0r-2.5.0
     sed -i.bak 's/-arch i386//' CMakeLists.txt # OS X https://github.com/dyne/frei0r/issues/64
     do_cmake_and_install "-DWITHOUT_OPENCV=1" # XXX could look at this more...
 
@@ -1727,7 +1727,7 @@ build_zvbi() {
 }
 
 build_fribidi() {
-  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.9/fribidi-1.0.9.tar.xz # Get c2man errors building from repo
+  download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz # Get c2man errors building from repo
   cd fribidi-1.0.9
     generic_configure "--disable-debug --disable-deprecated --disable-docs"
     do_make_and_make_install
@@ -2039,27 +2039,27 @@ build_lsmash() { # an MP4 library
   cd ..
 }
 
-build_libdvdread() {
-  build_libdvdcss
-  download_and_unpack_file http://dvdnav.mplayerhq.hu/releases/libdvdread-4.9.9.tar.xz # last revision before 5.X series so still works with MPlayer
-  cd libdvdread-4.9.9
-    # XXXX better CFLAGS here...
-    generic_configure "CFLAGS=-DHAVE_DVDCSS_DVDCSS_H LDFLAGS=-ldvdcss --enable-dlfcn" # vlc patch: "--enable-libdvdcss" # XXX ask how I'm *supposed* to do this to the dvdread peeps [svn?]
-    do_make_and_make_install
-    sed -i.bak 's/-ldvdread.*/-ldvdread -ldvdcss/' "$PKG_CONFIG_PATH/dvdread.pc"
-  cd ..
-}
-
-build_libdvdnav() {
-  download_and_unpack_file http://dvdnav.mplayerhq.hu/releases/libdvdnav-4.2.1.tar.xz # 4.2.1. latest revision before 5.x series [?]
-  cd libdvdnav-4.2.1
-    if [[ ! -f ./configure ]]; then
-      ./autogen.sh
-    fi
-    generic_configure_make_install
-    sed -i.bak 's/-ldvdnav.*/-ldvdnav -ldvdread -ldvdcss -lpsapi/' "$PKG_CONFIG_PATH/dvdnav.pc" # psapi for dlfcn ... [hrm?]
-  cd ..
-}
+# build_libdvdread() {
+#   build_libdvdcss
+#   download_and_unpack_file http://dvdnav.mplayerhq.hu/releases/libdvdread-4.9.9.tar.xz # last revision before 5.X series so still works with MPlayer
+#   cd libdvdread-4.9.9
+#     # XXXX better CFLAGS here...
+#     generic_configure "CFLAGS=-DHAVE_DVDCSS_DVDCSS_H LDFLAGS=-ldvdcss --enable-dlfcn" # vlc patch: "--enable-libdvdcss" # XXX ask how I'm *supposed* to do this to the dvdread peeps [svn?]
+#     do_make_and_make_install
+#     sed -i.bak 's/-ldvdread.*/-ldvdread -ldvdcss/' "$PKG_CONFIG_PATH/dvdread.pc"
+#   cd ..
+# }
+# 
+# build_libdvdnav() {
+#   download_and_unpack_file http://dvdnav.mplayerhq.hu/releases/libdvdnav-4.2.1.tar.xz # 4.2.1. latest revision before 5.x series [?]
+#   cd libdvdnav-4.2.1
+#     if [[ ! -f ./configure ]]; then
+#       ./autogen.sh
+#     fi
+#     generic_configure_make_install
+#     sed -i.bak 's/-ldvdnav.*/-ldvdnav -ldvdread -ldvdcss -lpsapi/' "$PKG_CONFIG_PATH/dvdnav.pc" # psapi for dlfcn ... [hrm?]
+#   cd ..
+# }
 
 build_libdvdcss() {
   generic_download_and_make_and_install https://download.videolan.org/pub/videolan/libdvdcss/1.2.13/libdvdcss-1.2.13.tar.bz2
@@ -2175,8 +2175,8 @@ build_vlc() {
   return
   # vlc's own dependencies:
   build_lua
-  build_libdvdread
-  build_libdvdnav
+  # build_libdvdread
+  # build_libdvdnav
   build_libx265
   build_libjpeg_turbo
   build_ffmpeg
@@ -2280,8 +2280,8 @@ EOF
 build_mplayer() {
   # pre requisites
   build_libjpeg_turbo
-  build_libdvdread
-  build_libdvdnav
+  # build_libdvdread
+  # build_libdvdnav
 
   download_and_unpack_file https://sourceforge.net/projects/mplayer-edl/files/mplayer-export-snapshot.2014-05-19.tar.bz2 mplayer-export-2014-05-19
   cd mplayer-export-2014-05-19
@@ -2435,12 +2435,12 @@ build_ffmpeg() {
     # config_options+=" --enable-libgme"
     config_options+=" --enable-libgsm"
     config_options+=" --enable-libilbc"
-    config_options+=" --enable-libmodplug"
+    # config_options+=" --enable-libmodplug"
     config_options+=" --enable-libmp3lame"
     config_options+=" --enable-libopencore-amrnb"
     config_options+=" --enable-libopencore-amrwb"
     config_options+=" --enable-libopus"
-    # config_options+=" --enable-libsnappy"
+    config_options+=" --enable-libsnappy"
     config_options+=" --enable-libsoxr"
     config_options+=" --enable-libspeex"
     # config_options+=" --enable-libtheora"
@@ -2462,10 +2462,10 @@ build_ffmpeg() {
 
     config_options+=" --disable-everything"
     config_options+=" --enable-filter=aap,acompressor,acontrast,acrossfade,acrossover,acrusher,acue,adeclick,adeclip,adecorrelate,adelay,adenorm,aderivative,adrc,adynamicequalizer,adynamicsmooth,aecho,aemphasis,aeval,aevalsrc,aexciter,afade,afdelaysrc,afftdn,afftfilt,afir,afireqsrc,afirsrc,aformat,afreqshift,afwtdn,agate,aiir,aintegral,alatency,alimiter,allpass,aloop,amerge,ametadata,amix,amovie,amultiply,anequalizer,anlmdn,anlmf,anlms,anoisesrc,anull,anullsink,anullsrc,apad,aperms,aphasemeter,aphaser,aphaseshift,apsnr,apsyclip,apulsator,arealtime,aresample,areverse,arls,arnndn,asdr,asegment,aselect,asendcmd,asetnsamples,asetpts,asetrate,asettb,ashowinfo,asidedata,asisdr,asoftclip,aspectralstats,asplit,astats,astreamselect,asubboost,asubcut,asupercut,asuperpass,asuperstop,atempo,atilt,atrim,avectorscope,avsynctest,axcorrelate,bandpass,bandreject,bass,biquad,bs2b,channelmap,channelsplit,chorus,compand,compensationdelay,crossfeed,crystalizer,dcshift,deesser,dialoguenhance,drmeter,dynaudnorm,earwax,equalizer,extrastereo,firequalizer,flanger,haas,hdcd,headphone,highpass,highshelf,hilbert,join,loudnorm,lowpass,lowshelf,mcompand,midequalizer,mix,noise,normalize,pan,realtime,remap,replaygain,resample,reverse,rubberband,sidechaincompress,sidechaingate,silencedetect,silenceremove,sine,sofalizer,speechnorm,stereotools,stereowiden,superequalizer,surround,tiltshelf,treble,tremolo,vibrato,virtualbass,volume,volumedetect"    
-    config_options+=" --enable-decoder=aac,ac3,mp3,opus,vorbis,pcm_alaw,pcm_bluray,pcm_dvd,pcm_f32be,pcm_f32le,pcm_f64be,pcm_f64le,pcm_mulaw,pcm_s16be,pcm_s16be_planar,pcm_s16le,pcm_s16le_planar,pcm_s24be,pcm_s24daud,pcm_s24le,pcm_s24le_planar,pcm_s32be,pcm_s32le,pcm_s32le_planar,pcm_s64be,pcm_s64le,pcm_s8,pcm_s8_planar,pcm_u16be,pcm_u16le,pcm_u24be,pcm_u24le,pcm_u32be,pcm_u32le,pcm_u8,pcm_vidc"
-    config_options+=" --enable-encoder=aac,ac3,libmp3lame,opus,vorbis,pcm_alaw,pcm_bluray,pcm_dvd,pcm_f32be,pcm_f32le,pcm_f64be,pcm_f64le,pcm_mulaw,pcm_s16be,pcm_s16be_planar,pcm_s16le,pcm_s16le_planar,pcm_s24be,pcm_s24daud,pcm_s24le,pcm_s24le_planar,pcm_s32be,pcm_s32le,pcm_s32le_planar,pcm_s64be,pcm_s64le,pcm_s8,pcm_s8_planar,pcm_u16be,pcm_u16le,pcm_u24be,pcm_u24le,pcm_u32be,pcm_u32le,pcm_u8,pcm_vidc"
-    config_options+=" --enable-demuxer=aac,ac3,mov,m4a,m4v,matroska,mp3,ogg,wav"
-    config_options+=" --enable-muxer=ac3,matroska,mp3,ogg,opus,wav"
+    config_options+=" --enable-decoder=aac,mp3,opus,vorbis,pcm_s8,pcm_s8_planar,pcm_u16be,pcm_u16le,pcm_u24be,pcm_u24le,pcm_u32be,pcm_u32le,pcm_u8,pcm_vidc,pcm_alaw,pcm_f32be,pcm_f32le,pcm_f64be,pcm_f64le,pcm_mulaw,pcm_s16be,pcm_s16be_planar,pcm_s16le,pcm_s16le_planar,pcm_s24be,pcm_s24daud,pcm_s24le,pcm_s24le_planar,pcm_s32be,pcm_s32le,pcm_s32le_planar,pcm_s64be,pcm_s64le"
+    config_options+=" --enable-encoder=aac,libmp3lame,opus,vorbis,pcm_s8,pcm_s8_planar,pcm_alaw,pcm_bluray,pcm_dvd,pcm_f32be,pcm_f32le,pcm_f64be,pcm_f64le,pcm_mulaw,pcm_s16be,pcm_s16be_planar,pcm_s16le,pcm_s16le_planar,pcm_s24be,pcm_s24daud,pcm_s24le,pcm_s24le_planar,pcm_s32be,pcm_s32le,pcm_s32le_planar,pcm_s64be,pcm_s64le,pcm_u16be,pcm_u16le,pcm_u24be,pcm_u24le,pcm_u32be,pcm_u32le,pcm_u8,pcm_vidc"
+    config_options+=" --enable-demuxer=aac,mov,m4a,mp3,ogg,wav"
+    config_options+=" --enable-muxer=mp3,ogg,opus,wav"
     config_options+=" --enable-protocol=file"
     config_options+=" --disable-autodetect"
     config_options+=" --disable-doc"
@@ -2520,7 +2520,7 @@ build_ffmpeg() {
     config_options+=" --extra-libs=-lz"
     # config_options+=" --extra-libs=-lpng"
     config_options+=" --extra-libs=-lm" # libflite seemed to need this linux native...and have no .pc file huh?
-    # config_options+=" --extra-libs=-lfreetype"
+    # config_options+=" -- extra-libs=-lfreetype"
 
     if [[ $compiler_flavors != "native" ]]; then
       config_options+=" --extra-libs=-lshlwapi" # lame needed this, no .pc file?
