@@ -1375,7 +1375,7 @@ build_lame() {
   download_and_unpack_file https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz lame-3.100
   cd lame-3.100
     sed -i.bak '1s/^\xEF\xBB\xBF//' libmp3lame/i386/nasm.h # Remove a UTF-8 BOM that breaks nasm if it's still there; should be fixed in trunk eventually https://sourceforge.net/p/lame/patches/81/
-    do_configure "--enable-nasm --enable-libmpg123 --disable-nls"
+    generic_configure "--enable-nasm --enable-libmpg123 --disable-nls"
     do_make_and_make_install
   cd ..
 }
