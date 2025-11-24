@@ -1375,6 +1375,7 @@ build_lame() {
   download_and_unpack_file https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz lame-3.100
   cd lame-3.100
     sed -i.bak '1s/^\xEF\xBB\xBF//' libmp3lame/i386/nasm.h # Remove a UTF-8 BOM that breaks nasm if it's still there; should be fixed in trunk eventually https://sourceforge.net/p/lame/patches/81/
+    sed -i 's/#include <langinfo.h>//' frontend/parse.c
     generic_configure "--enable-nasm --enable-libmpg123 --disable-nls"
     do_make_and_make_install
   cd ..
@@ -1386,7 +1387,6 @@ build_twolame() {
     if [[ ! -f Makefile.am.bak ]]; then # Library only, front end refuses to build for some reason with git master
       sed -i.bak "/^SUBDIRS/s/ frontend.*//" Makefile.am || exit 1
     fi
-    sed -i 's/#include <langinfo.h>//' frontend/parse.c # Perhaps this fixes it
     cpu_count=1 # maybe can't handle it http://betterlogic.com/roger/2017/07/mp3lame-woe/ comments
     generic_configure_make_install
     cpu_count=$original_cpu_count
