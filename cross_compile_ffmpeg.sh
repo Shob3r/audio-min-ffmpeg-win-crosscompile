@@ -787,7 +787,7 @@ build_bzip2() {
 
 build_liblzma() {
   download_and_unpack_file https://sourceforge.net/projects/lzmautils/files/xz-5.8.1.tar.xz
-  cd xz-5.2.5
+  cd xz-5.8.1
     generic_configure "--disable-xz --disable-xzdec --disable-lzmadec --disable-lzmainfo --disable-scripts --disable-doc --disable-nls"
     do_make_and_make_install
   cd ..
