@@ -314,6 +314,7 @@ download_gcc_build_script() {
 install_cross_compiler() {
   local win32_gcc="cross_compilers/mingw-w64-i686/bin/i686-w64-mingw32-gcc"
   local win64_gcc="cross_compilers/mingw-w64-x86_64/bin/x86_64-w64-mingw32-gcc"
+  
   if [[ -f $win32_gcc && -f $win64_gcc ]]; then
    echo "MinGW-w64 compilers both already installed, not re-installing..."
    if [[ -z $compiler_flavors ]]; then
@@ -334,49 +335,42 @@ install_cross_compiler() {
   mkdir -p cross_compilers
   cd cross_compilers
 
-    unset CFLAGS # don't want these "windows target" settings used the compiler itself since it creates executables to run on the local box (we have a parameter allowing them to set them for the script "all builds" basically)
-    # pthreads version to avoid having to use cvs for it
+    unset CFLAGS # don't want these "windows target" settings used the compiler itself
+    
     echo "Starting to download and build cross compile version of gcc [requires working internet access] with thread count $gcc_cpu_count..."
     echo ""
 
-    # --disable-shared allows c++ to be distributed at all...which seemed necessary for some random dependency which happens to use/require c++...
-    local zeranoe_script_name=mingw-w64-build-r22.local
-    local zeranoe_script_options="--gcc-ver=15.2.0 --mingw-w64-ver=13.0.0 --default-configure --cpu-count=$gcc_cpu_count --disable-shared --clean-build --verbose --allow-overwrite --threads=winpthreads" # allow-overwrite to avoid some crufty prompts if I do rebuilds [or maybe should just nuke everything...]
+    # Download the new build script
+    local zeranoe_script_name=mingw-w64-build
+    rm -f $zeranoe_script_name || exit 1
+    curl -4 https://raw.githubusercontent.com/Zeranoe/mingw-w64-build/refs/heads/master/mingw-w64-build -O --fail || exit 1
+    chmod u+x $zeranoe_script_name
+    
+    # New script options - uses branches instead of versions
+    local zeranoe_script_options="--jobs=$gcc_cpu_count --root=$PWD --gcc-branch=releases/gcc-15 --mingw-w64-branch=master --binutils-branch=binutils-2_44-branch"
+    
     if [[ ($compiler_flavors == "win32" || $compiler_flavors == "multi") && ! -f ../$win32_gcc ]]; then
       echo "Building win32 cross compiler..."
-      download_gcc_build_script $zeranoe_script_name
-      if [[ `uname` =~ "5.1" ]]; then # Avoid using secure API functions for compatibility with msvcrt.dll on Windows XP.
-        sed -i "s/ --enable-secure-api//" $zeranoe_script_name
-      fi
-      CFLAGS=-O2 CXXFLAGS=-O2 nice ./$zeranoe_script_name $zeranoe_script_options --build-type=win32 || exit 1
+      nice ./$zeranoe_script_name $zeranoe_script_options --prefix=$PWD/mingw-w64-i686 i686 || exit 1
       if [[ ! -f ../$win32_gcc ]]; then
         echo "Failure building 32 bit gcc? Recommend nuke sandbox (rm -rf sandbox) and start over..."
         exit 1
       fi
-      if [[ ! -f  ../cross_compilers/mingw-w64-i686/i686-w64-mingw32/lib/libmingwex.a ]]; then
-	      echo "failure building mingwex? 32 bit"
-	      exit 1
-      fi
     fi
+    
     if [[ ($compiler_flavors == "win64" || $compiler_flavors == "multi") && ! -f ../$win64_gcc ]]; then
       echo "Building win64 x86_64 cross compiler..."
-      download_gcc_build_script $zeranoe_script_name
-      CFLAGS=-O2 CXXFLAGS=-O2 nice ./$zeranoe_script_name $zeranoe_script_options --build-type=win64 || exit 1
+      nice ./$zeranoe_script_name $zeranoe_script_options --prefix=$PWD/mingw-w64-x86_64 x86_64 || exit 1
       if [[ ! -f ../$win64_gcc ]]; then
         echo "Failure building 64 bit gcc? Recommend nuke sandbox (rm -rf sandbox) and start over..."
         exit 1
       fi
-      if [[ ! -f  ../cross_compilers/mingw-w64-x86_64/x86_64-w64-mingw32/lib/libmingwex.a ]]; then
-	      echo "failure building mingwex? 64 bit"
-	      exit 1
-      fi
     fi
 
-    # rm -f build.log # leave resultant build log...sometimes useful...
     reset_cflags
   cd ..
   echo "Done building (or already built) MinGW-w64 cross-compiler(s) successfully..."
-  echo `date` # so they can see how long it took :)
+  echo `date`
 }
 
 # helper methods for downloading and building projects that can take generic input
