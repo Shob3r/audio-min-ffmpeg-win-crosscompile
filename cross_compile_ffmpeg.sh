@@ -1121,7 +1121,7 @@ build_fontconfig() {
 
 build_gmp() {
   download_and_unpack_file https://ftp.gnu.org/pub/gnu/gmp/gmp-6.3.0.tar.xz
-  cd gmp-6.2.1
+  cd gmp-6.3.0
     export CC_FOR_BUILD=/usr/bin/gcc # WSL seems to need this..
     export CPP_FOR_BUILD=usr/bin/cpp
     generic_configure "ABI=$bits_target"
@@ -1159,7 +1159,7 @@ build_librtmfp() {
 
 build_libnettle() {
   download_and_unpack_file https://ftp.gnu.org/gnu/nettle/nettle-3.10.tar.gz
-  cd nettle-3.6
+  cd nettle-3.10
     local config_options="--disable-openssl --disable-documentation" # in case we have both gnutls and openssl, just use gnutls [except that gnutls uses this so...huh?
     if [[ $compiler_flavors == "native" ]]; then
       config_options+=" --libdir=${mingw_w64_x86_64_prefix}/lib" # Otherwise native builds install to /lib32 or /lib64 which gnutls doesn't find
@@ -1719,7 +1719,7 @@ build_zvbi() {
 
 build_fribidi() {
   download_and_unpack_file https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz # Get c2man errors building from repo
-  cd fribidi-1.0.9
+  cd fribidi-1.0.16
     generic_configure "--disable-debug --disable-deprecated --disable-docs"
     do_make_and_make_install
   cd ..
