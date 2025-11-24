@@ -1372,10 +1372,10 @@ build_mpg123() {
 }
 
 build_lame() {
-  download_and_unpack_file https://ftp.acc.umu.se/mirror/cygwin/noarch/release/mingw64-x86_64-lame/mingw64-x86_64-lame-3.100-1-src.tar.xz lame-3.100
+  download_and_unpack_file https://sourceforge.net/projects/lame/files/lame/3.100/lame-3.100.tar.gz lame-3.100
   cd lame-3.100
     sed -i.bak '1s/^\xEF\xBB\xBF//' libmp3lame/i386/nasm.h # Remove a UTF-8 BOM that breaks nasm if it's still there; should be fixed in trunk eventually https://sourceforge.net/p/lame/patches/81/
-    # sed -i 's/#include <langinfo.h>//' frontend/parse.c
+    apply_patch file://$patch_dir/lame-3.100-symbols.patch
     generic_configure "--enable-nasm --enable-libmpg123 --disable-nls"
     do_make_and_make_install
   cd ..
