@@ -346,9 +346,6 @@ install_cross_compiler() {
     curl -4 https://raw.githubusercontent.com/Zeranoe/mingw-w64-build/refs/heads/master/mingw-w64-build -O --fail || exit 1
     chmod u+x $zeranoe_script_name
     
-    # New script options - uses branches instead of versions
-    local zeranoe_script_options="--jobs=$gcc_cpu_count --root=$PWD --gcc-branch=releases/gcc-15 --mingw-w64-branch=master --binutils-branch=binutils-2_44-branch"
-    
     if [[ ($compiler_flavors == "win32" || $compiler_flavors == "multi") && ! -f ../$win32_gcc ]]; then
       echo "Building win32 cross compiler..."
       nice ./$zeranoe_script_name $zeranoe_script_options --prefix=$PWD/mingw-w64-i686 i686 || exit 1
