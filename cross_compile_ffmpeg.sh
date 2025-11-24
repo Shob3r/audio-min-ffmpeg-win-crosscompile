@@ -2061,9 +2061,9 @@ build_lsmash() { # an MP4 library
 #   cd ..
 # }
 
-build_libdvdcss() {
-  generic_download_and_make_and_install https://download.videolan.org/pub/videolan/libdvdcss/1.2.13/libdvdcss-1.2.13.tar.bz2
-}
+# build_libdvdcss() {
+#   generic_download_and_make_and_install https://download.videolan.org/pub/videolan/libdvdcss/1.2.13/libdvdcss-1.2.13.tar.bz2
+# }
 
 build_libjpeg_turbo() {
   do_git_checkout https://github.com/libjpeg-turbo/libjpeg-turbo libjpeg-turbo_git "origin/main"
@@ -2088,16 +2088,16 @@ EOF
 
 build_libproxy() {
   # NB this lacks a .pc file still
-  download_and_unpack_file https://libproxy.googlecode.com/files/libproxy-0.4.11.tar.gz
-  cd libproxy-0.4.11
+  do_git_checkout https://github.com/libproxy/libproxy.git libproxy
+  cd libproxy
     sed -i.bak "s/= recv/= (void *) recv/" libmodman/test/main.cpp # some compile failure
     do_cmake_and_install
   cd ..
 }
 
 build_lua() {
-  download_and_unpack_file https://www.lua.org/ftp/lua-5.3.3.tar.gz
-  cd lua-5.3.3
+  download_and_unpack_file https://www.lua.org/ftp/lua-5.4.8.tar.gz
+  cd lua-5.4.8
     export AR="${cross_prefix}ar rcu" # needs rcu parameter so have to call it out different :|
     do_make "CC=${cross_prefix}gcc RANLIB=${cross_prefix}ranlib generic" # generic == "generic target" and seems to result in a static build, no .exe's blah blah the mingw option doesn't even build liblua.a
     unset AR
@@ -2107,8 +2107,8 @@ build_lua() {
 }
 
 build_libcurl() {
-  download_and_unpack_file https://curl.haxx.se/download/curl-7.86.0.tar.gz
-  cd curl-7.86.0
+  download_and_unpack_file https://curl.se/download/curl-8.17.0.tar.gz
+  cd curl-8.17.0
     generic_configure "--without-ssl" # XXX use --with-gnutls but it needed pkg-config or some odd?
     do_make_and_make_install
   cd ..
@@ -2141,79 +2141,79 @@ build_dvbtee_app() {
   cd ..
 }
 
-build_qt() {
-  build_libjpeg_turbo # libjpeg a dependency [?]
-  unset CFLAGS # it makes something of its own first, which runs locally, so can't use a foreign arch, or maybe it can, but not important enough: http://stackoverflow.com/a/18775859/32453 XXXX could look at this
-  #download_and_unpack_file http://pkgs.fedoraproject.org/repo/pkgs/qt/qt-everywhere-opensource-src-4.8.7.tar.gz/d990ee66bf7ab0c785589776f35ba6ad/qt-everywhere-opensource-src-4.8.7.tar.gz # untested
-  #cd qt-everywhere-opensource-src-4.8.7
-  # download_and_unpack_file http://download.qt-project.org/official_releases/qt/5.1/5.1.1/submodules/qtbase-opensource-src-5.1.1.tar.xz qtbase-opensource-src-5.1.1 # not officially supported seems...so didn't try it
-  download_and_unpack_file http://pkgs.fedoraproject.org/repo/pkgs/qt/qt-everywhere-opensource-src-4.8.5.tar.gz/1864987bdbb2f58f8ae8b350dfdbe133/qt-everywhere-opensource-src-4.8.5.tar.gz
-  cd qt-everywhere-opensource-src-4.8.5
-    apply_patch file://$patch_dir/imageformats.patch
-    apply_patch file://$patch_dir/qt-win64.patch
-    # vlc's configure options...mostly
-    do_configure "-static -release -fast -no-exceptions -no-stl -no-sql-sqlite -no-qt3support -no-gif -no-libmng -qt-libjpeg -no-libtiff -no-qdbus -no-openssl -no-webkit -sse -no-script -no-multimedia -no-phonon -opensource -no-scripttools -no-opengl -no-script -no-scripttools -no-declarative -no-declarative-debug -opensource -no-s60 -host-little-endian -confirm-license -xplatform win32-g++ -device-option CROSS_COMPILE=$cross_prefix -prefix $mingw_w64_x86_64_prefix -prefix-install -nomake examples"
-    if [ ! -f 'already_qt_maked_k' ]; then
-      make sub-src -j $cpu_count
-      make install sub-src # let it fail, baby, it still installs a lot of good stuff before dying on mng...? huh wuh?
-      cp ./plugins/imageformats/libqjpeg.a $mingw_w64_x86_64_prefix/lib || exit 1 # I think vlc's install is just broken to need this [?]
-      cp ./plugins/accessible/libqtaccessiblewidgets.a  $mingw_w64_x86_64_prefix/lib || exit 1 # this feels wrong...
-      # do_make_and_make_install "sub-src" # sub-src might make the build faster? # complains on mng? huh?
-      touch 'already_qt_maked_k'
-    fi
-    # vlc needs an adjust .pc file? huh wuh?
-    sed -i.bak 's/Libs: -L${libdir} -lQtGui/Libs: -L${libdir} -lcomctl32 -lqjpeg -lqtaccessiblewidgets -lQtGui/' "$PKG_CONFIG_PATH/QtGui.pc" # sniff
-  cd ..
-  reset_cflags
-}
+# build_qt() {
+#   build_libjpeg_turbo # libjpeg a dependency [?]
+#   unset CFLAGS # it makes something of its own first, which runs locally, so can't use a foreign arch, or maybe it can, but not important enough: http://stackoverflow.com/a/18775859/32453 XXXX could look at this
+#   #download_and_unpack_file http://pkgs.fedoraproject.org/repo/pkgs/qt/qt-everywhere-opensource-src-4.8.7.tar.gz/d990ee66bf7ab0c785589776f35ba6ad/qt-everywhere-opensource-src-4.8.7.tar.gz # untested
+#   #cd qt-everywhere-opensource-src-4.8.7
+#   # download_and_unpack_file http://download.qt-project.org/official_releases/qt/5.1/5.1.1/submodules/qtbase-opensource-src-5.1.1.tar.xz qtbase-opensource-src-5.1.1 # not officially supported seems...so didn't try it
+#   download_and_unpack_file http://pkgs.fedoraproject.org/repo/pkgs/qt/qt-everywhere-opensource-src-4.8.5.tar.gz/1864987bdbb2f58f8ae8b350dfdbe133/qt-everywhere-opensource-src-4.8.5.tar.gz
+#   cd qt-everywhere-opensource-src-4.8.5
+#     apply_patch file://$patch_dir/imageformats.patch
+#     apply_patch file://$patch_dir/qt-win64.patch
+#     # vlc's configure options...mostly
+#     do_configure "-static -release -fast -no-exceptions -no-stl -no-sql-sqlite -no-qt3support -no-gif -no-libmng -qt-libjpeg -no-libtiff -no-qdbus -no-openssl -no-webkit -sse -no-script -no-multimedia -no-phonon -opensource -no-scripttools -no-opengl -no-script -no-scripttools -no-declarative -no-declarative-debug -opensource -no-s60 -host-little-endian -confirm-license -xplatform win32-g++ -device-option CROSS_COMPILE=$cross_prefix -prefix $mingw_w64_x86_64_prefix -prefix-install -nomake examples"
+#     if [ ! -f 'already_qt_maked_k' ]; then
+#       make sub-src -j $cpu_count
+#       make install sub-src # let it fail, baby, it still installs a lot of good stuff before dying on mng...? huh wuh?
+#       cp ./plugins/imageformats/libqjpeg.a $mingw_w64_x86_64_prefix/lib || exit 1 # I think vlc's install is just broken to need this [?]
+#       cp ./plugins/accessible/libqtaccessiblewidgets.a  $mingw_w64_x86_64_prefix/lib || exit 1 # this feels wrong...
+#       # do_make_and_make_install "sub-src" # sub-src might make the build faster? # complains on mng? huh?
+#       touch 'already_qt_maked_k'
+#     fi
+#     # vlc needs an adjust .pc file? huh wuh?
+#     sed -i.bak 's/Libs: -L${libdir} -lQtGui/Libs: -L${libdir} -lcomctl32 -lqjpeg -lqtaccessiblewidgets -lQtGui/' "$PKG_CONFIG_PATH/QtGui.pc" # sniff
+#   cd ..
+#   reset_cflags
+# }
 
-build_vlc() {
-  # currently broken, since it got too old for libavcodec and I didn't want to build its own custom one yet to match, and now it's broken with gcc 5.2.0 seemingly
-  # call out dependencies here since it's a lot, plus hierarchical FTW!
-  # should be ffmpeg 1.1.1 or some odd?
-  echo "not building vlc, broken dependencies or something weird"
-  return
-  # vlc's own dependencies:
-  build_lua
-  # build_libdvdread
-  # build_libdvdnav
-  build_libx265
-  build_libjpeg_turbo
-  build_ffmpeg
-  build_qt
-
-  # currently vlc itself currently broken :|
-  do_git_checkout https://github.com/videolan/vlc.git
-  cd vlc_git
-  #apply_patch file://$patch_dir/vlc_localtime_s.patch # git revision needs it...
-  # outdated and patch doesn't apply cleanly anymore apparently...
-  #if [[ "$non_free" = "y" ]]; then
-  #  apply_patch https://raw.githubusercontent.com/gcsx/ffmpeg-windows-build-helpers/patch-5/patches/priorize_avcodec.patch
-  #fi
-  if [[ ! -f "configure" ]]; then
-    ./bootstrap
-  fi
-  export DVDREAD_LIBS='-ldvdread -ldvdcss -lpsapi'
-  do_configure "--disable-libgcrypt --disable-a52 --host=$host_target --disable-lua --disable-mad --enable-qt --disable-sdl --disable-mod" # don't have lua mingw yet, etc. [vlc has --disable-sdl [?]] x265 disabled until we care enough... Looks like the bluray problem was related to the BLURAY_LIBS definition. [not sure what's wrong with libmod]
-  rm -f `find . -name *.exe` # try to force a rebuild...though there are tons of .a files we aren't rebuilding as well FWIW...:|
-  rm -f already_ran_make* # try to force re-link just in case...
-  do_make
-  # do some gymnastics to avoid building the mozilla plugin for now [couldn't quite get it to work]
-  #sed -i.bak 's_git://git.videolan.org/npapi-vlc.git_https://github.com/rdp/npapi-vlc.git_' Makefile # this wasn't enough...following lines instead...
-  sed -i.bak "s/package-win-common: package-win-install build-npapi/package-win-common: package-win-install/" Makefile
-  sed -i.bak "s/.*cp .*builddir.*npapi-vlc.*//g" Makefile
-  make package-win-common # not do_make, fails still at end, plus this way we get new vlc.exe's
-  echo "
-
-
-     vlc success, created a file like ${PWD}/vlc-xxx-git/vlc.exe
-
-
-
-"
-  cd ..
-  unset DVDREAD_LIBS
-}
+# build_vlc() {
+#   # currently broken, since it got too old for libavcodec and I didn't want to build its own custom one yet to match, and now it's broken with gcc 5.2.0 seemingly
+#   # call out dependencies here since it's a lot, plus hierarchical FTW!
+#   # should be ffmpeg 1.1.1 or some odd?
+#   echo "not building vlc, broken dependencies or something weird"
+#   return
+#   # vlc's own dependencies:
+#   build_lua
+#   # build_libdvdread
+#   # build_libdvdnav
+#   build_libx265
+#   build_libjpeg_turbo
+#   build_ffmpeg
+#   build_qt
+# 
+#   # currently vlc itself currently broken :|
+#   do_git_checkout https://github.com/videolan/vlc.git
+#   cd vlc_git
+#   #apply_patch file://$patch_dir/vlc_localtime_s.patch # git revision needs it...
+#   # outdated and patch doesn't apply cleanly anymore apparently...
+#   #if [[ "$non_free" = "y" ]]; then
+#   #  apply_patch https://raw.githubusercontent.com/gcsx/ffmpeg-windows-build-helpers/patch-5/patches/priorize_avcodec.patch
+#   #fi
+#   if [[ ! -f "configure" ]]; then
+#     ./bootstrap
+#   fi
+#   export DVDREAD_LIBS='-ldvdread -ldvdcss -lpsapi'
+#   do_configure "--disable-libgcrypt --disable-a52 --host=$host_target --disable-lua --disable-mad --enable-qt --disable-sdl --disable-mod" # don't have lua mingw yet, etc. [vlc has --disable-sdl [?]] x265 disabled until we care enough... Looks like the bluray problem was related to the BLURAY_LIBS definition. [not sure what's wrong with libmod]
+#   rm -f `find . -name *.exe` # try to force a rebuild...though there are tons of .a files we aren't rebuilding as well FWIW...:|
+#   rm -f already_ran_make* # try to force re-link just in case...
+#   do_make
+#   # do some gymnastics to avoid building the mozilla plugin for now [couldn't quite get it to work]
+#   #sed -i.bak 's_git://git.videolan.org/npapi-vlc.git_https://github.com/rdp/npapi-vlc.git_' Makefile # this wasn't enough...following lines instead...
+#   sed -i.bak "s/package-win-common: package-win-install build-npapi/package-win-common: package-win-install/" Makefile
+#   sed -i.bak "s/.*cp .*builddir.*npapi-vlc.*//g" Makefile
+#   make package-win-common # not do_make, fails still at end, plus this way we get new vlc.exe's
+#   echo "
+# 
+# 
+#      vlc success, created a file like ${PWD}/vlc-xxx-git/vlc.exe
+# 
+# 
+# 
+# "
+#   cd ..
+#   unset DVDREAD_LIBS
+# }
 
 reset_cflags() {
   export CFLAGS=$original_cflags
@@ -2520,7 +2520,7 @@ build_ffmpeg() {
     config_options+=" --extra-libs=-lz"
     # config_options+=" --extra-libs=-lpng"
     config_options+=" --extra-libs=-lm" # libflite seemed to need this linux native...and have no .pc file huh?
-    # config_options+=" -- extra-libs=-lfreetype"
+    # config_options+=" --extra-libs=-lfreetype"
 
     if [[ $compiler_flavors != "native" ]]; then
       config_options+=" --extra-libs=-lshlwapi" # lame needed this, no .pc file?
