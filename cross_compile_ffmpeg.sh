@@ -814,7 +814,7 @@ build_zlib() {
 
 build_iconv() {
   download_and_unpack_file https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz
-  cd libiconv-1.16
+  cd libiconv-1.18
     generic_configure "--disable-nls"
     do_make "install-lib" # No need for 'do_make_install', because 'install-lib' already has install-instructions.
   cd ..
