@@ -794,22 +794,22 @@ build_liblzma() {
 }
 
 build_zlib() {
-  download_and_unpack_file https://github.com/madler/zlib/archive/v1.3.1.tar.gz zlib-1.2.11
-  cd zlib-1.2.11
-    local make_options
-    if [[ $compiler_flavors == "native" ]]; then
-      export CFLAGS="$CFLAGS -fPIC" # For some reason glib needs this even though we build a static library
-    else
-      export ARFLAGS=rcs # Native can't take ARFLAGS; https://stackoverflow.com/questions/21396988/zlib-build-not-configuring-properly-with-cross-compiler-ignores-ar
-    fi
-    do_configure "--prefix=$mingw_w64_x86_64_prefix --static"
-    do_make_and_make_install "$make_prefix_options ARFLAGS=rcs"
-    if [[ $compiler_flavors == "native" ]]; then
-      reset_cflags
-    else
-      unset ARFLAGS
-    fi
-  cd ..
+  do_git_checkout https://github.com/madler/zlib.git zlib
+  cd zlib
+  local make_options
+  if [[ $compiler_flavors == "native" ]]; then
+    export CFLAGS="$CFLAGS -fPIC" # For some reason glib needs this even though we build a static library
+  else
+    export ARFLAGS=rcs # Native can't take ARFLAGS; https://stackoverflow.com/questions/21396988/zlib-build-not-configuring-properly-with-cross-compiler-ignores-ar
+  fi
+  do_configure "--prefix=$mingw_w64_x86_64_prefix --static"
+  do_make_and_make_install "$make_prefix_options ARFLAGS=rcs"
+   if [[ $compiler_flavors == "native" ]]; then
+     reset_cflags
+   else
+     unset ARFLAGS
+   fi
+ cd ..
 }
 
 build_iconv() {
