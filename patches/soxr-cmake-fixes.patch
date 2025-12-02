@@ -1,0 +1,147 @@
+From 4a882b179ee2ddb7f491c925023f0cf3affa163d Mon Sep 17 00:00:00 2001
+From: dofuuz <8174871+dofuuz@users.noreply.github.com> 
+Date: Sun, 28 Jul 2024 18:33:21 +0900
+Subject: [PATCH] Fix CMake warnings
+
+---
+ CMakeLists.txt                            |  2 +-
+ cmake/Modules/FindSIMD64.cmake            |  1 +
+ examples/CMakeLists.txt                   |  2 +-
+ lsr-tests/CMakeLists.txt                  | 10 +++++-----
+ lsr-tests/cmake/Modules/Findsndfile.cmake |  2 +-
+ src/CMakeLists.txt                        | 14 +++++++++-----
+ 6 files changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e72ae8d..192f699 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # SoX Resampler Library       Copyright (c) 2007-18 robs@users.sourceforge.net
+ # Licence for this file: LGPL v2.1                  See LICENCE for details.
+ 
+-cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
++cmake_minimum_required (VERSION 3.1...3.28 FATAL_ERROR)
+ 
+ project (soxr C)
+ set (DESCRIPTION_SUMMARY
+diff --git a/cmake/Modules/FindSIMD64.cmake b/cmake/Modules/FindSIMD64.cmake
+index d412644..33b2c35 100644
+--- a/cmake/Modules/FindSIMD64.cmake
++++ b/cmake/Modules/FindSIMD64.cmake
+@@ -11,6 +11,7 @@ if (DEFINED SIMD64_C_FLAGS OR CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
+   set (TRIAL_C_FLAGS)
+ else ()
+   set (TRIAL_C_FLAGS
++    " "
+     "-mavx" # Gcc
+     "/arch:AVX" # MSVC
+   )
+diff --git a/examples/CMakeLists.txt b/examples/CMakeLists.txt
+index c8c17c9..5005f00 100644
+--- a/examples/CMakeLists.txt
++++ b/examples/CMakeLists.txt
+@@ -21,7 +21,7 @@ endif ()
+ 
+ foreach (fe ${SOURCES} ${LSR_SOURCES})
+   get_filename_component (f ${fe} NAME_WE)
+-  add_executable (${f} ${fe})
++  add_executable (${f} ${fe}.c)
+   if (${f} STREQUAL "1a-lsr")
+     target_link_libraries (${f} soxr-lsr)
+   endif ()
+diff --git a/lsr-tests/CMakeLists.txt b/lsr-tests/CMakeLists.txt
+index 4f718f7..af34753 100644
+--- a/lsr-tests/CMakeLists.txt
++++ b/lsr-tests/CMakeLists.txt
+@@ -25,7 +25,7 @@ check_include_files (sys/times.h HAVE_SYS_TIMES_H)
+ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+ include_directories (${CMAKE_CURRENT_BINARY_DIR})
+ 
+-add_library (tests_lib STATIC util calc_snr)
++add_library (tests_lib STATIC util.c calc_snr.c)
+ 
+ link_libraries (tests_lib ${PROJECT_NAME}-lsr ${LIBM_LIBRARIES})
+ 
+@@ -40,11 +40,11 @@ if (WITH_CR64 OR WITH_CR64S)
+ endif ()
+ 
+ foreach (test ${tests})
+-  add_executable (${test} ${test})
++  add_executable (${test} ${test}.c)
+   add_test (lsr-${test} ${BIN}${test})
+   set_property (TEST lsr-${test} PROPERTY ENVIRONMENT "SOXR_LSR_STRICT=1")
+ endforeach ()
+ 
+-add_executable (multichan_throughput_test multichan_throughput_test)
+-add_executable (throughput_test throughput_test )
+-add_executable (sndfile-resample sndfile-resample)
++add_executable (multichan_throughput_test multichan_throughput_test.c)
++add_executable (throughput_test throughput_test.c)
++add_executable (sndfile-resample sndfile-resample.c)
+diff --git a/lsr-tests/cmake/Modules/Findsndfile.cmake b/lsr-tests/cmake/Modules/Findsndfile.cmake
+index b2fd725..e0f092c 100644
+--- a/lsr-tests/cmake/Modules/Findsndfile.cmake
++++ b/lsr-tests/cmake/Modules/Findsndfile.cmake
+@@ -18,6 +18,6 @@ find_library (SNDFILE_LIBRARIES NAMES sndfile)
+ 
+ include (FindPackageHandleStandardArgs)
+ find_package_handle_standard_args (
+-  SNDFILE DEFAULT_MSG SNDFILE_LIBRARIES SNDFILE_INCLUDES)
++  sndfile DEFAULT_MSG SNDFILE_LIBRARIES SNDFILE_INCLUDES)
+ 
+ mark_as_advanced (SNDFILE_LIBRARIES SNDFILE_INCLUDES)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index bb01a0d..d753aa1 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -38,7 +38,7 @@ elseif (WITH_CR32S)
+   endif ()
+ endif ()
+ 
+-set (SOURCES ${PROJECT_NAME}.c data-io)
++set (SOURCES ${PROJECT_NAME} data-io)
+ 
+ if (WITH_CR32 OR WITH_CR32S OR WITH_CR64 OR WITH_CR64S)
+   list (APPEND SOURCES dbesi0 filter fft4g64 cr)
+@@ -59,7 +59,7 @@ endif ()
+ if (WITH_CR32S)
+   foreach (source cr32s ${RDFT32S} util32s)
+     list (APPEND SOURCES ${source})
+-    set_property (SOURCE ${source}
++    set_property (SOURCE ${source}.c
+         APPEND_STRING PROPERTY COMPILE_FLAGS ${SIMD32_C_FLAGS})
+   endforeach ()
+ endif ()
+@@ -67,16 +67,20 @@ endif ()
+ if (WITH_CR64S)
+   foreach (source cr64s pffft64s util64s)
+     list (APPEND SOURCES ${source})
+-    set_property (SOURCE ${source}
++    set_property (SOURCE ${source}.c
+         APPEND_STRING PROPERTY COMPILE_FLAGS ${SIMD64_C_FLAGS})
+   endforeach ()
+ endif ()
+ 
++# Fix CMP0115 deprecation with explicit file extension
++foreach (source ${SOURCES})
++  list (APPEND SRC_C ${source}.c)
++endforeach ()
+ 
+ 
+ # Libsoxr:
+ 
+-add_library (${PROJECT_NAME} ${LIB_TYPE} ${SOURCES})
++add_library (${PROJECT_NAME} ${LIB_TYPE} ${SRC_C})
+ target_link_libraries (${PROJECT_NAME} PRIVATE ${LIBS} ${LIBM_LIBRARIES})
+ set_target_properties (${PROJECT_NAME} PROPERTIES
+   VERSION "${SO_VERSION}"
+@@ -100,7 +104,7 @@ if (WITH_LSR_BINDINGS)
+   set (LSR ${PROJECT_NAME}-lsr)
+   set (LSR_SO_VERSION 0.1.9)
+   set (LSR_SO_VERSION_MAJOR 0)
+-  add_library (${LSR} ${LIB_TYPE} ${LSR})
++  add_library (${LSR} ${LIB_TYPE} ${LSR}.c)
+   target_link_libraries (${LSR} ${PROJECT_NAME})
+   set_target_properties (${LSR} PROPERTIES
+     VERSION "${LSR_SO_VERSION}"

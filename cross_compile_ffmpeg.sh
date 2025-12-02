@@ -141,7 +141,7 @@ check_missing_packages () {
     exit 1
   fi
 
-  export REQUIRED_CMAKE_VERSION="3.0.0"
+  export REQUIRED_CMAKE_VERSION="4.0.0"
   for cmake_binary in 'cmake' 'cmake3'; do
     # We need to check both binaries the same way because the check for installed packages will work if *only* cmake3 is installed or
     # if *only* cmake is installed.
@@ -820,28 +820,28 @@ build_iconv() {
   cd ..
 }
 
-# build_sdl2() {
-#   download_and_unpack_file https://www.libsdl.org/release/SDL2-2.32.10.tar.gz
-#   cd SDL2-2.32.10
-#     # apply_patch file://$patch_dir/SDL2-2.0.12_lib-only.diff
-#     if [[ ! -f configure.bak ]]; then
-#       sed -i.bak "s/ -mwindows//" configure # Allow ffmpeg to output anything to console.
-#     fi
-#     export CFLAGS="$CFLAGS -DDECLSPEC="  # avoid SDL trac tickets 939 and 282 [broken shared builds]
-#     if [[ $compiler_flavors == "native" ]]; then
-#       unset PKG_CONFIG_LIBDIR # Allow locally installed things for native builds; libpulse-dev is an important one otherwise no audio for most Linux
-#     fi
-#     generic_configure "--bindir=$mingw_bin_path"
-#     do_make_and_make_install
-#     if [[ $compiler_flavors == "native" ]]; then
-#       export PKG_CONFIG_LIBDIR=
-#     fi
-#     if [[ ! -f $mingw_bin_path/$host_target-sdl2-config ]]; then
-#       mv "$mingw_bin_path/sdl2-config" "$mingw_bin_path/$host_target-sdl2-config" # At the moment FFmpeg's 'configure' doesn't use 'sdl2-config', because it gives priority to 'sdl2.pc', but when it does, it expects 'i686-w64-mingw32-sdl2-config' in 'cross_compilers/mingw-w64-i686/bin'.
-#     fi
-#     reset_cflags
-#   cd ..
-# }
+build_sdl2() {
+  download_and_unpack_file https://www.libsdl.org/release/SDL2-2.32.10.tar.gz
+  cd SDL2-2.32.10
+    # apply_patch file://$patch_dir/SDL2-2.0.12_lib-only.diff
+    if [[ ! -f configure.bak ]]; then
+      sed -i.bak "s/ -mwindows//" configure # Allow ffmpeg to output anything to console.
+    fi
+    export CFLAGS="$CFLAGS -DDECLSPEC="  # avoid SDL trac tickets 939 and 282 [broken shared builds]
+    if [[ $compiler_flavors == "native" ]]; then
+      unset PKG_CONFIG_LIBDIR # Allow locally installed things for native builds; libpulse-dev is an important one otherwise no audio for most Linux
+    fi
+    generic_configure "--bindir=$mingw_bin_path"
+    do_make_and_make_install
+    if [[ $compiler_flavors == "native" ]]; then
+      export PKG_CONFIG_LIBDIR=
+    fi
+    if [[ ! -f $mingw_bin_path/$host_target-sdl2-config ]]; then
+      mv "$mingw_bin_path/sdl2-config" "$mingw_bin_path/$host_target-sdl2-config" # At the moment FFmpeg's 'configure' doesn't use 'sdl2-config', because it gives priority to 'sdl2.pc', but when it does, it expects 'i686-w64-mingw32-sdl2-config' in 'cross_compilers/mingw-w64-i686/bin'.
+    fi
+    reset_cflags
+  cd ..
+}
 
 # build_amd_amf_headers() {
 #   # was https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git too big
@@ -1528,6 +1528,7 @@ build_libbs2b() {
 build_libsoxr() {
   do_git_checkout https://github.com/chirlu/soxr.git soxr_git
   cd soxr_git
+    apply_patch file://$patch_dir/soxr-cmake-fixes.patch -p1
     do_cmake_and_install "-DHAVE_WORDS_BIGENDIAN_EXITCODE=0 -DWITH_OPENMP=0 -DBUILD_TESTS=0 -DBUILD_EXAMPLES=0"
   cd ..
 }
@@ -1536,9 +1537,10 @@ build_libflite() {
   # download_and_unpack_file http://www.festvox.org/flite/packed/flite-2.1/flite-2.1-release.tar.bz2
   # original link is not working so using a substitute
   # from a trusted source
-  download_and_unpack_file https://old-releases.ubuntu.com/ubuntu/pool/universe/f/flite/flite_2.1-release.orig.tar.bz2 flite-2.1-release
-  cd flite-2.1-release
-    apply_patch file://$patch_dir/flite-2.1.0_mingw-w64-fixes.patch
+  # download_and_unpack_file https://old-releases.ubuntu.com/ubuntu/pool/universe/f/flite/flite_2.1-release.orig.tar.bz2 flite-2.1-release
+  do_git_checkout https://github.com/festvox/flite.git flite-git
+  cd flite-git
+    # apply_patch file://$patch_dir/flite-2.1.0_mingw-w64-fixes.patch
     if [[ ! -f main/Makefile.bak ]]; then
       sed -i.bak "s/cp -pd/cp -p/" main/Makefile # friendlier cp for OS X
     fi
@@ -1548,7 +1550,7 @@ build_libflite() {
 }
 
 build_libsnappy() {
-  do_git_checkout https://github.com/google/snappy.git snappy_git 1.1.8 # got weird failure once
+  do_git_checkout https://github.com/google/snappy.git snappy_git
   cd snappy_git
     do_cmake_and_install "-DBUILD_BINARY=OFF -DCMAKE_BUILD_TYPE=Release -DSNAPPY_BUILD_TESTS=OFF" # extra params from deadsix27 and from new cMakeLists.txt content
     rm -f $mingw_w64_x86_64_prefix/lib/libsnappy.dll.a # unintall shared :|
@@ -2419,7 +2421,7 @@ build_ffmpeg() {
     # config_options+=" --enable-libass"
     # config_options+=" --enable-libbluray"
     config_options+=" --enable-libbs2b"
-    config_options+=" --enable-libflite"
+    # config_options+=" --enable-libflite"
     # config_options+=" --enable-libfreetype"
     # config_options+=" --enable-libfribidi"
     # config_options+=" --enable-libharfbuzz"
@@ -2703,7 +2705,7 @@ build_ffmpeg_dependencies() {
   build_bzip2 # Bzlib (bzip2) in FFmpeg is autodetected.
   build_liblzma # Lzma in FFmpeg is autodetected. Uses dlfcn.
   build_iconv # Iconv in FFmpeg is autodetected. Uses dlfcn.
-  # build_sdl2 # Sdl2 in FFmpeg is autodetected. Needed to build FFPlay. Uses iconv and dlfcn.
+  build_sdl2 # Sdl2 in FFmpeg is autodetected. Needed to build FFPlay. Uses iconv and dlfcn.
   # if [[ $build_amd_amf = y ]]; then
   #   build_amd_amf_headers
   # fi
@@ -2750,7 +2752,7 @@ build_ffmpeg_dependencies() {
   # build_libbluray # Needs libxml >= 2.6, freetype, fontconfig. Uses dlfcn.
   build_libbs2b # Needs libsndfile. Uses dlfcn.
   build_libsoxr
-  build_libflite
+  # build_libflite
   build_libsnappy # Uses zlib (only for unittests [disabled]) and dlfcn.
   build_vamp_plugin # Needs libsndfile for 'vamp-simple-host.exe' [disabled].
   build_fftw # Uses dlfcn.
