@@ -1,0 +1,183 @@
+--- a/frontend/parse.c	2025-12-02 02:08:53.249927373 -0800
++++ b/frontend/parse.c	2025-12-02 02:06:29.433904822 -0800
+@@ -71,7 +71,7 @@
+ #include <iconv.h>
+ #include <errno.h>
+ #include <locale.h>
+-#include <langinfo.h>
++// #include <langinfo.h>
+ #endif
+ 
+ #if defined _ALLOW_INTERNAL_OPTIONS
+@@ -124,171 +124,6 @@
+ , TENC_UTF16   /* text will be converted from local encoding to Unicode, as ID3v2 wants it */
+ } TextEncoding;
+ 
+-#ifdef HAVE_ICONV
+-#define ID3TAGS_EXTENDED
+-/* search for Zero termination in multi-byte strings */
+-static size_t
+-strlenMultiByte(char const* str, size_t w)
+-{    
+-    size_t n = 0;
+-    if (str != 0) {
+-        size_t i, x = 0;
+-        for (n = 0; ; ++n) {
+-            x = 0;
+-            for (i = 0; i < w; ++i) {
+-                x += *str++ == 0 ? 1 : 0;
+-            }
+-            if (x == w) {
+-                break;
+-            }
+-        }
+-    }
+-    return n;
+-}
+-
+-
+-static size_t
+-currCharCodeSize(void)
+-{
+-    size_t n = 1;
+-    char dst[32];
+-    char* src = "A";
+-    char* cur_code = nl_langinfo(CODESET);
+-    iconv_t xiconv = iconv_open(cur_code, "ISO_8859-1");
+-    if (xiconv != (iconv_t)-1) {
+-        for (n = 0; n < 32; ++n) {
+-            char* i_ptr = src;
+-            char* o_ptr = dst;
+-            size_t srcln = 1;
+-            size_t avail = n;
+-            size_t rc = iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+-            if (rc != (size_t)-1) {
+-                break;
+-            }
+-        }
+-        iconv_close(xiconv);
+-    }
+-    return n;
+-}
+-
+-#if 0
+-static
+-char* fromLatin1( char* src )
+-{
+-    char* dst = 0;
+-    if (src != 0) {
+-        size_t const l = strlen(src);
+-        size_t const n = l*4;
+-        dst = calloc(n+4, 4);
+-        if (dst != 0) {
+-            char* cur_code = nl_langinfo(CODESET);
+-            iconv_t xiconv = iconv_open(cur_code, "ISO_8859-1");
+-            if (xiconv != (iconv_t)-1) {
+-                char* i_ptr = src;
+-                char* o_ptr = dst;
+-                size_t srcln = l;
+-                size_t avail = n;                
+-                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+-                iconv_close(xiconv);
+-            }
+-        }
+-    }
+-    return dst;
+-}
+-
+-static
+-char* fromUtf16( char* src )
+-{
+-    char* dst = 0;
+-    if (src != 0) {
+-        size_t const l = strlenMultiByte(src, 2);
+-        size_t const n = l*4;
+-        dst = calloc(n+4, 4);
+-        if (dst != 0) {
+-            char* cur_code = nl_langinfo(CODESET);
+-            iconv_t xiconv = iconv_open(cur_code, "UTF-16LE");
+-            if (xiconv != (iconv_t)-1) {
+-                char* i_ptr = (char*)src;
+-                char* o_ptr = dst;
+-                size_t srcln = l*2;
+-                size_t avail = n;                
+-                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+-                iconv_close(xiconv);
+-            }
+-        }
+-    }
+-    return dst;
+-}
+-#endif
+-
+-static
+-char* toLatin1( char* src )
+-{
+-    size_t w = currCharCodeSize();
+-    char* dst = 0;
+-    if (src != 0) {
+-        size_t const l = strlenMultiByte(src, w);
+-        size_t const n = l*4;
+-        dst = calloc(n+4, 4);
+-        if (dst != 0) {
+-            char* cur_code = nl_langinfo(CODESET);
+-            iconv_t xiconv = iconv_open("ISO_8859-1//TRANSLIT", cur_code);
+-            if (xiconv != (iconv_t)-1) {
+-                char* i_ptr = (char*)src;
+-                char* o_ptr = dst;
+-                size_t srcln = l*w;
+-                size_t avail = n;
+-                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+-                iconv_close(xiconv);
+-            }
+-        }
+-    }
+-    return dst;
+-}
+-
+-
+-static
+-char* toUtf16( char* src )
+-{
+-    size_t w = currCharCodeSize();
+-    char* dst = 0;
+-    if (src != 0) {
+-        size_t const l = strlenMultiByte(src, w);
+-        size_t const n = (l+1)*4;
+-        dst = calloc(n+4, 4);
+-        if (dst != 0) {
+-            char* cur_code = nl_langinfo(CODESET);
+-            iconv_t xiconv = iconv_open("UTF-16LE//TRANSLIT", cur_code);
+-            dst[0] = 0xff;
+-            dst[1] = 0xfe;
+-            if (xiconv != (iconv_t)-1) {
+-                char* i_ptr = (char*)src;
+-                char* o_ptr = &dst[2];
+-                size_t srcln = l*w;
+-                size_t avail = n;
+-                iconv(xiconv, &i_ptr, &srcln, &o_ptr, &avail);
+-                iconv_close(xiconv);
+-            }
+-        }
+-    }
+-    return dst;
+-}
+-#endif
+-
+-#if defined( _WIN32 ) && !defined(__MINGW32__)
+-#define ID3TAGS_EXTENDED
+-
+-char* toLatin1(char const* s)
+-{
+-    return utf8ToLatin1(s);
+-}
+-
+-unsigned short* toUtf16(char const* s)
+-{
+-    return utf8ToUtf16(s);
+-}
+-#endif
+-
+ static int evaluateArgument(char const* token, char const* arg, char* _EndPtr)
+ {
+     if (arg != 0 && arg != _EndPtr)
