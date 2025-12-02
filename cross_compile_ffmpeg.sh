@@ -1545,7 +1545,7 @@ build_libflite() {
       sed -i.bak "s/cp -pd/cp -p/" main/Makefile # friendlier cp for OS X
     fi
     generic_configure
-    do_make_and_make_install
+    do_make_and_make_install -j1 # Newer flite builds do not like parallel builds. Force -j1
   cd ..
 }
 
@@ -2421,12 +2421,12 @@ build_ffmpeg() {
     # config_options+=" --enable-libass"
     # config_options+=" --enable-libbluray"
     config_options+=" --enable-libbs2b"
-    # config_options+=" --enable-libflite"
+    config_options+=" --enable-libflite"
     # config_options+=" --enable-libfreetype"
     # config_options+=" --enable-libfribidi"
     # config_options+=" --enable-libharfbuzz"
     # config_options+=" --enable-filter=drawtext"
-    # config_options+=" --enable-libgme"
+    config_options+=" --enable-libgme"
     config_options+=" --enable-libgsm"
     config_options+=" --enable-libilbc"
     # config_options+=" --enable-libmodplug"
@@ -2752,7 +2752,7 @@ build_ffmpeg_dependencies() {
   # build_libbluray # Needs libxml >= 2.6, freetype, fontconfig. Uses dlfcn.
   build_libbs2b # Needs libsndfile. Uses dlfcn.
   build_libsoxr
-  # build_libflite
+  build_libflite
   build_libsnappy # Uses zlib (only for unittests [disabled]) and dlfcn.
   build_vamp_plugin # Needs libsndfile for 'vamp-simple-host.exe' [disabled].
   build_fftw # Uses dlfcn.
