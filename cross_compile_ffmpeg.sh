@@ -1364,7 +1364,7 @@ build_libsndfile() {
 }
 
 build_mpg123() {
-  do_svn_checkout svn://scm.orgis.org/mpg123/trunk mpg123_svn r5008 # avoid Think again failure
+  do_svn_checkout svn://scm.orgis.org/mpg123/trunk mpg123_svn
   cd mpg123_svn
     generic_configure
     do_make_and_make_install
@@ -2421,7 +2421,7 @@ build_ffmpeg() {
     # config_options+=" --enable-libass"
     # config_options+=" --enable-libbluray"
     config_options+=" --enable-libbs2b"
-    config_options+=" --enable-libflite"
+    # config_options+=" --enable-libflite"
     # config_options+=" --enable-libfreetype"
     # config_options+=" --enable-libfribidi"
     # config_options+=" --enable-libharfbuzz"
@@ -2752,7 +2752,7 @@ build_ffmpeg_dependencies() {
   # build_libbluray # Needs libxml >= 2.6, freetype, fontconfig. Uses dlfcn.
   build_libbs2b # Needs libsndfile. Uses dlfcn.
   build_libsoxr
-  build_libflite
+  # build_libflite
   build_libsnappy # Uses zlib (only for unittests [disabled]) and dlfcn.
   build_vamp_plugin # Needs libsndfile for 'vamp-simple-host.exe' [disabled].
   build_fftw # Uses dlfcn.
@@ -2872,7 +2872,7 @@ prefer_stable=y # Only for x264 and x265.
 build_intel_qsv=y # note: not windows xp friendly!
 build_amd_amf=y
 disable_nonfree=y # comment out to force user y/n selection
-original_cflags='-mtune=generic -O3' # high compatible by default, see #219, some other good options are listed below, or you could use -march=native to target your local box:
+original_cflags='-mtune=generic -Os' # high compatible by default, see #219, some other good options are listed below, or you could use -march=native to target your local box:
 original_cppflags='-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0' # Needed for mingw-w64 7 as FORTIFY_SOURCE is now partially implemented, but not actually working
 # if you specify a march it needs to first so x264's configure will use it :| [ is that still the case ?]
 
